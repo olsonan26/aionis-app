@@ -67,7 +67,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
   // Load full profile to check for name changes
   const { lang } = useLanguage();
   const [fullProfile, setFullProfile] = useState<NumerologyProfile | null>(null);
-  const [blueprintView] = useState<"mandala">("mandala");
+  // Blueprint visual - mandala only for now (brainstorming others with Luther)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("aionis_full_profile");
