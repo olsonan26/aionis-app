@@ -1,3 +1,5 @@
+import { useLanguage } from "@/lib/LanguageContext";
+import { tx } from "@/lib/i18n";
 import { useState, useMemo } from "react";
 import {
   calculateCoreNumbers,
@@ -20,6 +22,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { ExpandableCard } from "@/components/ui/expandable-card";
 import { FadeIn } from "@/components/ui/fade-in";
 import { GradientText } from "@/components/ui/glow-text";
+import { SectionExplainer } from "@/components/ui/section-explainer";
 import {
   Heart,
   Sparkles,
@@ -39,6 +42,7 @@ interface LoveScreenProps {
 }
 
 export default function LoveScreen({ profile }: LoveScreenProps) {
+  const { lang } = useLanguage();
   const [partnerName, setPartnerName] = useState("");
   const [partnerDay, setPartnerDay] = useState("");
   const [partnerMonth, setPartnerMonth] = useState("");
@@ -214,6 +218,10 @@ export default function LoveScreen({ profile }: LoveScreenProps) {
       </FadeIn>
 
       {/* Partner Input */}
+      <SectionExplainer
+        title={tx("love.title", lang)}
+        description="Compatibility is checked across 5 key areas: First Name Number (surface chemistry), Whole Name Number (overall dynamic), Heart's Desire (the most important — emotional connection), Day of Birth (life path harmony), and Whole Birthday Number (destiny alignment). Each area gets a compatibility score, and the weighted total tells you how naturally aligned you are."
+      />
       <FadeIn delay={200}>
         <SpotlightCard spotlightColor="rgba(236, 72, 153, 0.06)">
           <div className="p-4 space-y-3">

@@ -1,4 +1,6 @@
 import { useMemo, useState, useRef, useCallback } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { tx } from "@/lib/i18n";
 import {
   calculatePersonalYear,
   calculatePersonalMonth,
@@ -20,6 +22,9 @@ import { FadeIn } from "@/components/ui/fade-in";
 import { GradientText } from "@/components/ui/glow-text";
 import { NumberReveal } from "@/components/ui/animated-counter";
 import { ExpandableCard } from "@/components/ui/expandable-card";
+import { GlowBorder, ShimmerLine } from "@/components/ui/glow-border";
+import { BgPaths } from "@/components/ui/bg-paths";
+import { SectionExplainer } from "@/components/ui/section-explainer";
 import { NumberSpiral } from "@/components/ui/number-spiral";
 import { PulseRing } from "@/components/ui/pulse-ring";
 import { ContainerScroll } from "@/components/ui/container-scroll";
@@ -39,7 +44,7 @@ import {
   ChevronDown,
   ChevronUp,
   Layers,
-  HelpCircle,
+  // HelpCircle — now in SectionExplainer
 } from "lucide-react";
 
 interface HomeScreenProps {
@@ -52,27 +57,10 @@ const MONTH_NAMES = [
 ];
 
 /* ─── Section Explainer Component ─── */
-function SectionExplainer({ title, description }: { title: string; description: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <button
-      onClick={() => setOpen(!open)}
-      className="flex items-start gap-2 w-full text-left rounded-lg bg-white/[0.02] border border-white/[0.06] px-3 py-2 mb-3 transition-all hover:bg-white/[0.04]"
-    >
-      <HelpCircle className="h-3.5 w-3.5 mt-0.5 text-amber-400/60 shrink-0" />
-      <div>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/60">
-          What is {title}?
-        </span>
-        {open && (
-          <p className="mt-1 text-[11px] leading-relaxed text-white/40">{description}</p>
-        )}
-      </div>
-    </button>
-  );
-}
+// SectionExplainer imported from @/components/ui/section-explainer
 
 export default function HomeScreen({ profile }: HomeScreenProps) {
+  const { lang } = useLanguage();
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const currentDay = today.getDate();
@@ -143,18 +131,21 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
     <div className="flex flex-col gap-5 pb-24 pt-2">
       {/* ═══ Greeting ═══ */}
       <FadeIn>
-        <div className="flex items-center justify-between px-1">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-white/40">{dateStr}</p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-white">
-              Hello, <GradientText>{firstName}</GradientText>
-            </h1>
-            <p className="text-[10px] text-white/25 mt-0.5">
-              Born {MONTH_NAMES[profile.month]} {profile.day}, {profile.year}
-            </p>
-          </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/20">
-            <span className="font-display text-sm font-bold text-amber-400">{firstName[0]}</span>
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4">
+          <BgPaths color="#fbbf24" count={4} className="opacity-50" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40">{dateStr}</p>
+              <h1 className="mt-1 font-display text-2xl font-bold text-white">
+                Hello, <GradientText>{firstName}</GradientText>
+              </h1>
+              <p className="text-[10px] text-white/25 mt-0.5">
+                Born {MONTH_NAMES[profile.month]} {profile.day}, {profile.year}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/20 shadow-lg shadow-amber-400/5">
+              <span className="font-display text-lg font-bold text-amber-400">{firstName[0]}</span>
+            </div>
           </div>
         </div>
       </FadeIn>
@@ -180,10 +171,11 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
             title="Today's Energy"
             description="These four numbers represent the different energies influencing your life right now. Tap any one to jump to its detailed reading below. The first tells you how you're likely feeling today, the second reveals the theme of your environment, the third shows how you'll likely feel this month, and the fourth tells you what to focus on this month."
           />
-          <div className="grid grid-cols-2 gap-2.5">
+          <GlowBorder color={NUM_COLORS.DE.color} speed={6}>
+          <div className="grid grid-cols-2 gap-2.5 p-3">
             {[
-              { label: "How You're Likely Feeling Today", value: de.value, compound: de.compound, colorKey: 'DE' as const, icon: <Sun className="h-4 w-4" />, ref: dailyRef },
-              { label: "The Theme of Your Environment", value: pd.value, compound: pd.compound, colorKey: 'CORE' as const, icon: <Eye className="h-4 w-4" />, ref: personalDayRef },
+              { label: tx("home.energyGrid.de", lang), value: de.value, compound: de.compound, colorKey: 'DE' as const, icon: <Sun className="h-4 w-4" />, ref: dailyRef },
+              { label: tx("home.energyGrid.pd", lang), value: pd.value, compound: pd.compound, colorKey: 'CORE' as const, icon: <Eye className="h-4 w-4" />, ref: personalDayRef },
               { label: "How You're Likely to Feel This Month", value: pm.value, compound: pm.compound, colorKey: 'PM' as const, icon: <Moon className="h-4 w-4" />, ref: monthRef },
               { label: "What You Should Focus On This Month", value: mcom.value, compound: mcom.compound, colorKey: 'MCOM' as const, icon: <TrendingUp className="h-4 w-4" />, ref: combinerRef },
             ].map((item) => (
@@ -212,6 +204,8 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
               </button>
             ))}
           </div>
+          </GlowBorder>
+          <ShimmerLine color={NUM_COLORS.DE.color} />
         </div>
       </FadeIn>
 
@@ -220,7 +214,7 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
         <FadeIn delay={150}>
           <div className="flex flex-col gap-2">
             <SectionExplainer
-              title="Caution Alerts"
+              title={tx("home.caution", lang)}
               description="Red warnings appear when certain compound numbers (like 13, 16, or 19) show up in your chart. These aren't bad — they're just reminders to be more mindful. Think of them as yellow traffic lights, not red ones. They highlight areas where extra awareness can help you navigate the day more smoothly."
             />
             {activeWarnings.slice(0, 3).map((w: any, i: number) => (
@@ -249,7 +243,7 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
             </h3>
             <p className="mb-3 px-1 text-[10px] text-white/25">This is your Day energy. It changes every day.</p>
             <SectionExplainer
-              title="How You're Likely Feeling Today"
+              title={tx("home.energyGrid.de", lang)}
               description={`Your Daily Essence (DE) is calculated from your full name, birthday, and today's date. It tells you the specific energy you're working with today, ${today.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}. This is the first thing to check when you open the app — it's your personal weather forecast for the day.`}
             />
 
@@ -308,11 +302,50 @@ export default function HomeScreen({ profile }: HomeScreenProps) {
         </FadeIn>
       </div>
 
+      {/* ═══ WEEKLY OUTLOOK ═══ */}
+      <FadeIn delay={210}>
+        <ExpandableCard
+          title={tx("home.weeklyOutlook", lang)}
+          subtitle={`${MONTH_NAMES[currentMonth]} ${today.getDate()} – ${today.getDate() + 6}`}
+          icon={<Calendar className="h-4 w-4 text-cyan-400" />}
+          accentColor="rgba(6,182,212,0.15)"
+          defaultOpen={false}
+          onboardingHint="See the energy patterns for the rest of this week at a glance."
+        >
+          <div className="space-y-2 mt-2">
+            {Array.from({ length: 7 }).map((_, i) => {
+              const d = new Date(today);
+              d.setDate(d.getDate() + i);
+              const weekDE = calculateDailyEssence(profile.name, profile.day, profile.month, profile.year, d.getDate(), d.getMonth() + 1, d.getFullYear());
+              const weekPD = calculatePersonDay(profile.day, profile.month, d.getDate(), d.getMonth() + 1, d.getFullYear());
+              const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+              const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              const isToday = i === 0;
+              return (
+                <div key={i} className={`flex items-center gap-3 py-2 px-3 rounded-xl transition-all ${
+                  isToday ? "bg-cyan-400/[0.06] border border-cyan-400/10" : "bg-white/[0.02]"
+                }`}>
+                  <div className="w-12 shrink-0">
+                    <p className={`text-[10px] font-semibold ${isToday ? "text-cyan-400" : "text-white/40"}`}>{dayName}</p>
+                    <p className="text-[9px] text-white/25">{dateLabel}</p>
+                  </div>
+                  <div className="flex gap-2 flex-1">
+                    <PulseRing number={weekDE.value} color={NUM_COLORS.DE.color} size="sm" label="DE" />
+                    <PulseRing number={weekPD.value} color={NUM_COLORS.CORE.color} size="sm" label="PD" />
+                  </div>
+                  {isToday && <span className="text-[8px] text-cyan-400 font-semibold uppercase tracking-wider">Today</span>}
+                </div>
+              );
+            })}
+          </div>
+        </ExpandableCard>
+      </FadeIn>
+
       {/* ═══ PERSONAL DAY section ═══ */}
       <div ref={personalDayRef}>
         <FadeIn delay={220}>
           <SectionExplainer
-            title="The Theme of Your Environment"
+            title={tx("home.energyGrid.pd", lang)}
             description={`Your Personal Day number is calculated from your birth day, birth month, and today's calendar date. It reveals the specific opportunities and challenges that today (${dateStr}) brings to you personally — separate from the broader monthly energy.`}
           />
           <SpotlightCard className="p-4">

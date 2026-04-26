@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/LanguageContext";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   calculateCoreNumbers,
@@ -122,6 +123,7 @@ ${monthForecast || "Not available"}
 }
 
 export default function ChatScreen({ profile }: ChatScreenProps) {
+  const { lang } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,8 +183,8 @@ export default function ChatScreen({ profile }: ChatScreenProps) {
             <Bot className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <h2 className="font-display text-base font-bold text-white">Ask My Reading</h2>
-            <p className="text-xs text-white/40">AI that knows your entire chart</p>
+            <h2 className="font-display text-base font-bold text-white">{lang === "es" ? "Pregúntale a Mi Lectura" : "Ask My Reading"}</h2>
+            <p className="text-xs text-white/40">{lang === "es" ? "IA que conoce toda tu carta" : "AI that knows your entire chart"}</p>
           </div>
           <div className="ml-auto flex items-center gap-1">
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -278,7 +280,7 @@ export default function ChatScreen({ profile }: ChatScreenProps) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask about your chart..."
+            placeholder={lang === "es" ? "Pregunta sobre tu carta..." : "Ask about your chart..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}

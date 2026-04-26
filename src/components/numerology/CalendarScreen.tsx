@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/LanguageContext";
 import { useState, useMemo } from "react";
 import {
   calculateDailyEssence,
@@ -39,6 +40,7 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const CAUTION_COMPOUNDS = [13, 16, 19];
 
 export default function CalendarScreen({ profile }: CalendarScreenProps) {
+  const { lang } = useLanguage();
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -148,7 +150,7 @@ export default function CalendarScreen({ profile }: CalendarScreenProps) {
       {/* Monthly Overview */}
       <FadeIn delay={60}>
         <ExpandableCard
-          title={`${MONTH_NAMES[viewMonth]} Overview`}
+          title={lang === "es" ? `Resumen de ${MONTH_NAMES[viewMonth]}` : `${MONTH_NAMES[viewMonth]} Overview`}
           subtitle={`PME ${monthContext.pmeVal} + PM ${monthContext.pm.value}`}
           icon={<span style={{ color: NUM_COLORS.PM.color }}><Layers className="h-5 w-5" /></span>}
           onboardingHint="Your monthly energy context — the backdrop for all daily readings this month"
@@ -312,7 +314,7 @@ export default function CalendarScreen({ profile }: CalendarScreenProps) {
             {/* Rich reading */}
             {selectedDetails.deMeaning && (
               <ExpandableCard
-                title={`Essence ${selectedDetails.de.value} Reading`}
+                title={lang === "es" ? `Lectura de Esencia ${selectedDetails.de.value}` : `Essence ${selectedDetails.de.value} Reading`}
                 icon={<span style={{ color: NUM_COLORS.DE.color }}><Sun className="h-5 w-5" /></span>}
                 defaultOpen={true}
               >

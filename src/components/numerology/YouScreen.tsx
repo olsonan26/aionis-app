@@ -1,4 +1,9 @@
+import { useLanguage } from "@/lib/LanguageContext";
+import { tx } from "@/lib/i18n";
 import { useMemo, useState, useEffect } from "react";
+import NumerologyMandala from "./NumerologyMandala";
+import EnergySigWaveform from "./EnergySigWaveform";
+import SoulMapConstellation from "./SoulMapConstellation";
 import NameResonanceQuiz from "./NameResonanceQuiz";
 import type { NumerologyProfile } from "@/lib/profileStore";
 import {
@@ -11,6 +16,8 @@ import {
   getLetterValue,
   personalYear,
   compoundTrail,
+  calculateSeasons,
+  calculatePinnaclesChallenges,
 } from "@/lib/numerology";
 import { PLANE_DESCRIPTIONS, NUMBER_KEYWORDS } from "@/lib/descriptions";
 import {
@@ -51,6 +58,8 @@ import {
   Scale,
   AlertTriangle,
 } from "lucide-react";
+import { BgPaths } from "@/components/ui/bg-paths";
+import { SectionExplainer } from "@/components/ui/section-explainer";
 
 interface YouScreenProps {
   profile: { name: string; day: number; month: number; year: number };
@@ -58,7 +67,9 @@ interface YouScreenProps {
 
 export default function YouScreen({ profile }: YouScreenProps) {
   // Load full profile to check for name changes
+  const { lang } = useLanguage();
   const [fullProfile, setFullProfile] = useState<NumerologyProfile | null>(null);
+  const [blueprintView, setBlueprintView] = useState<"mandala" | "waveform" | "constellation">("mandala");
   useEffect(() => {
     try {
       const raw = localStorage.getItem("aionis_full_profile");
@@ -168,6 +179,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* Profile Header */}
       <FadeIn>
         <SpotlightCard className="relative overflow-hidden">
+          <BgPaths color="#a855f7" count={3} className="opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-br from-amber-400/[0.03] via-transparent to-violet-500/[0.03]" />
           <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-amber-400/[0.04] blur-3xl" />
 
@@ -212,6 +224,10 @@ export default function YouScreen({ profile }: YouScreenProps) {
       )}
 
       {/* ═══ Full Name Profile (from VI) ═══ */}
+      <SectionExplainer
+        title="Your Full Name Profile"
+        description="Your full name at birth carries a unique vibration. Each letter has a number value, and together they reveal your Expression (how you present to the world), Soul Urge (what drives you deep down), and other core traits. This section breaks down the energy encoded in your name."
+      />
       {fullNameProfile && (
         <FadeIn delay={80}>
           <ExpandableCard
@@ -264,6 +280,36 @@ export default function YouScreen({ profile }: YouScreenProps) {
         </FadeIn>
       )}
 
+      {/* ═══ NUMEROLOGICAL BLUEPRINT VISUAL ═══ */}
+      <FadeIn delay={50}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-center gap-2">
+            {(["mandala", "waveform", "constellation"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setBlueprintView(v)}
+                className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all ${
+                  blueprintView === v
+                    ? "bg-white/10 text-white border border-white/20"
+                    : "text-white/30 border border-transparent hover:text-white/50"
+                }`}
+              >
+                {v === "mandala" ? "🔮 Mandala" : v === "waveform" ? "〰️ Waveform" : "✨ Soul Map"}
+              </button>
+            ))}
+          </div>
+          {blueprintView === "mandala" && (
+            <NumerologyMandala name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
+          )}
+          {blueprintView === "waveform" && (
+            <EnergySigWaveform name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
+          )}
+          {blueprintView === "constellation" && (
+            <SoulMapConstellation name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
+          )}
+        </div>
+      </FadeIn>
+
       {/* Core Numbers */}
       <FadeIn delay={100}>
         <div>
@@ -298,6 +344,10 @@ export default function YouScreen({ profile }: YouScreenProps) {
       </FadeIn>
 
       {/* PMEI Planes */}
+      <SectionExplainer
+        title="PMEI Planes of Expression"
+        description="Every letter in your name falls on one of four planes: Physical (D, E, M, W), Mental (A, G, H, J, L, N, P), Emotional (B, I, O, R, S, T, X, Z), or Intuitive (C, F, K, Q, U, V, Y). The plane with the most letters is your Genius Factor — it's how you naturally process the world. This reveals whether you lead with action, logic, feelings, or intuition."
+      />
       <FadeIn delay={500}>
         <div>
           <h3 className="mb-3 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-white/40">
@@ -391,7 +441,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* Mind's Hidden Strategy */}
       <FadeIn delay={620}>
         <ExpandableCard
-          title="Mind's Hidden Strategy"
+          title={tx("you.hiddenStrategy", lang)}
           subtitle="How your mind protects you — and where it trips you up"
           icon={<Eye className="h-5 w-5 text-purple-400" />}
           badgeColor="bg-purple-400/10 text-purple-400"
@@ -451,7 +501,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {career && (
         <FadeIn delay={700}>
           <ExpandableCard
-            title="Career Guidance"
+            title={tx("you.careerGuidance", lang)}
             subtitle={`Birth Force ${core.birthForce.value} career path`}
             icon={<Briefcase className="h-5 w-5 text-emerald-400" />}
             onboardingHint="Career insights based on your Birth Force number"
@@ -489,7 +539,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* ═══ WHO AM I / MY PURPOSE ═══ */}
       <FadeIn delay={720}>
         <ExpandableCard
-          title="Who Am I / My Purpose"
+          title={tx("you.whoAmI", lang)}
           subtitle={`Life Path ${core.ultimateGoal.value} — Your reason for being`}
           icon={<Compass className="h-5 w-5 text-amber-400" />}
           badge={core.ultimateGoal.value}
@@ -516,7 +566,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* ═══ MY GROWTH EDGE (WEAKNESS) ═══ */}
       <FadeIn delay={740}>
         <ExpandableCard
-          title="My Growth Edge"
+          title={tx("you.growthEdge", lang)}
           subtitle="Where you tend to stumble — and how to rise"
           icon={<AlertTriangle className="h-5 w-5 text-orange-400" />}
           badgeColor="bg-orange-400/10 text-orange-400"
@@ -557,7 +607,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* ═══ BALANCE IN TIMES OF STRESS ═══ */}
       <FadeIn delay={760}>
         <ExpandableCard
-          title="Balance in Times of Stress"
+          title={tx("you.balanceStress", lang)}
           subtitle={`Balance Number ${core.balance?.value || "—"}`}
           icon={<Scale className="h-5 w-5 text-cyan-400" />}
           badge={core.balance?.value}
@@ -575,7 +625,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* ═══ BIRTH FORCE ═══ */}
       <FadeIn delay={780}>
         <ExpandableCard
-          title="Your Birth Force"
+          title={tx("you.birthForce", lang)}
           subtitle={`Birth Force ${core.birthForce.value} — Your natural abilities`}
           icon={<Zap className="h-5 w-5 text-yellow-400" />}
           badge={core.birthForce.value}
@@ -591,6 +641,10 @@ export default function YouScreen({ profile }: YouScreenProps) {
       </FadeIn>
 
       {/* ═══ MY DANGER WINDOWS ═══ */}
+      <SectionExplainer
+        title="Danger Windows"
+        description="Danger Windows are specific time periods where your chart shows heightened risk — accidents, health issues, or major disruptions. They're identified by looking at certain number combinations (like 4s, 7s, 16s) in your personal months and daily essence. Knowing them lets you take extra caution during those windows."
+      />
       <FadeIn delay={800}>
         {(() => {
           // Build danger windows from essence line + PY analysis
@@ -678,7 +732,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
 
           return (
             <ExpandableCard
-              title="My Danger Windows"
+              title={tx("you.dangerWindows", lang)}
               subtitle={`${dangerWindows.length} alert${dangerWindows.length > 1 ? "s" : ""} in the next 5 years`}
               icon={<AlertTriangle className="h-5 w-5 text-red-400" />}
               badge={dangerWindows.length}
@@ -702,10 +756,135 @@ export default function YouScreen({ profile }: YouScreenProps) {
         })()}
       </FadeIn>
 
+      {/* ═══ YOUR LIFE SEASONS ═══ */}
+      <SectionExplainer
+        title="Life Seasons"
+        description="Your life is divided into four seasons — Spring (youth), Summer (productivity), Autumn (harvest), and Winter (wisdom). Each season has a Pinnacle (your goal/opportunity) and a Challenge (the lesson you must learn). Knowing which season you're in helps you understand the bigger arc of your life."
+      />
+      <FadeIn delay={860}>
+        {(() => {
+          const seasonsData = calculateSeasons(profile.day, profile.month, profile.year);
+          const pinnacles = calculatePinnaclesChallenges(profile.day, profile.month, profile.year);
+          const SEASON_COLORS: Record<string, string> = { Spring: "#3b82f6", Summer: "#f97316", Autumn: "#eab308", Winter: "#a855f7" };
+          const SEASON_ICONS: Record<string, string> = { Spring: "🌱", Summer: "☀️", Autumn: "🍂", Winter: "❄️" };
+          const SEASON_DESCRIPTIONS: Record<string, string> = {
+            Spring: "The foundational season of life education. This is where you gain the primary experiences — love, loss, growth, struggle. By Spring's end, you've earned a great deal of life wisdom. Most people experience a major turning point when Spring ends.",
+            Summer: "The 'high-school years' of life. You learn about money, relationships, social dynamics, laws, and deeper self-knowledge. This 9-year period builds on everything Spring taught you. The transition from Spring to Summer is often the most challenging.",
+            Autumn: "The 'university years' of life. You gain expertise beyond everything you've learned. This is when you realize what you're truly best at and stop doing things that don't serve you. Autumn prepares you for Winter — the real beginning.",
+            Winter: "The real beginning of your life. This is when most people start to thrive — armed with decades of experience, you finally do what you love. Winter is not the end; it's when you become the boss of your own life.",
+          };
+          return (
+            <div className="space-y-3">
+              <ExpandableCard
+                title={tx("you.lifeSeasons", lang)}
+                subtitle={`Currently in ${seasonsData.currentSeason.name} (age ${seasonsData.currentAge})`}
+                icon={<span className="text-lg">{SEASON_ICONS[seasonsData.currentSeason.name]}</span>}
+                badge={seasonsData.currentSeason.name}
+                badgeColor={`text-white/80`}
+                onboardingHint="Just like the Earth has four seasons, your life has four major seasons. Each brings different lessons and opportunities."
+              >
+                <div className="space-y-4">
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    Your first season (Spring) ends at age <span className="font-bold text-white/60">{seasonsData.springEnd}</span>, calculated from your birthday. 
+                    Summer and Autumn each last 9 years, then Winter runs for the rest of your life.
+                  </p>
+
+                  {/* Visual timeline */}
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 space-y-2">
+                    {seasonsData.seasons.map((s) => {
+                      const isCurrent = s.name === seasonsData.currentSeason.name;
+                      const ageRange = s.endAge ? `${s.startAge}–${s.endAge}` : `${s.startAge}+`;
+                      const width = s.endAge ? Math.min(100, ((s.endAge - s.startAge) / 60) * 100) : 40;
+                      return (
+                        <div key={s.name} className={`rounded-lg p-2.5 transition-all ${isCurrent ? "bg-white/[0.04] border border-white/[0.08]" : ""}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span>{SEASON_ICONS[s.name]}</span>
+                              <span className="text-xs font-semibold" style={{ color: SEASON_COLORS[s.name] }}>{s.name}</span>
+                              {isCurrent && (
+                                <span className="text-[8px] rounded-full px-1.5 py-0.5 bg-amber-400/10 text-amber-400 uppercase tracking-wider">You are here</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-white/30 font-mono">Ages {ageRange}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-1000"
+                              style={{
+                                width: `${width}%`,
+                                backgroundColor: SEASON_COLORS[s.name],
+                                opacity: isCurrent ? 0.7 : 0.3,
+                              }}
+                            />
+                          </div>
+                          <p className="mt-1.5 text-[10px] leading-relaxed text-white/30">{SEASON_DESCRIPTIONS[s.name]}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-lg bg-amber-400/[0.04] border border-amber-400/[0.08] p-2.5">
+                    <p className="text-[10px] text-amber-400/60 leading-relaxed">
+                      💡 <span className="font-semibold">Key Insight:</span> The transition from Spring to Summer (around age {seasonsData.springEnd}) is statistically the most challenging period. 
+                      Many celebrities and public figures experience their biggest life changes at age 27 — that's not a coincidence, it's their seasonal change.
+                    </p>
+                  </div>
+                </div>
+              </ExpandableCard>
+
+              {/* Pinnacles & Challenges */}
+              <ExpandableCard
+                title={tx("you.pinnaclesChallenges", lang)}
+                subtitle="The ladders and obstacles at each season of your life"
+                icon={<Target className="h-5 w-5 text-emerald-400" />}
+                onboardingHint="Each life season comes with a Pinnacle (what you're reaching for) and a Challenge (what you must overcome). These are calculated from your birthday."
+              >
+                <div className="space-y-3">
+                  <p className="text-xs text-white/40 leading-relaxed mb-3">
+                    Pinnacles represent aspiring goals — what life is pushing you toward. Challenges are the obstacles that help you grow. 
+                    Both are tied directly to your four life seasons.
+                  </p>
+                  {pinnacles.map((pc, i) => {
+                    const isCurrent = seasonsData.currentSeason.name === pc.season;
+                    const sColor = SEASON_COLORS[pc.season] || "#fff";
+                    return (
+                      <SpotlightCard key={i} spotlightColor={`${sColor}15`} className={isCurrent ? "border-white/[0.12]" : ""}>
+                        <div className="p-3.5">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span>{SEASON_ICONS[pc.season]}</span>
+                              <span className="text-xs font-semibold" style={{ color: sColor }}>{pc.season}</span>
+                              {isCurrent && <span className="text-[8px] rounded-full px-1.5 py-0.5 bg-amber-400/10 text-amber-400">CURRENT</span>}
+                            </div>
+                            <span className="text-[10px] text-white/25 font-mono">
+                              Ages {pc.startAge}–{pc.endAge ?? "∞"}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg bg-emerald-400/[0.04] border border-emerald-400/[0.08] p-2.5 text-center">
+                              <span className="text-[9px] uppercase tracking-wider text-emerald-400/60 block mb-1">Pinnacle</span>
+                              <span className="font-bold text-lg text-emerald-400">{pc.pinnacle}</span>
+                            </div>
+                            <div className="rounded-lg bg-red-400/[0.04] border border-red-400/[0.08] p-2.5 text-center">
+                              <span className="text-[9px] uppercase tracking-wider text-red-400/60 block mb-1">Challenge</span>
+                              <span className="font-bold text-lg text-red-400">{pc.challenge}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </SpotlightCard>
+                    );
+                  })}
+                </div>
+              </ExpandableCard>
+            </div>
+          );
+        })()}
+      </FadeIn>
+
       {/* ═══ THE SCIENCE BEHIND THIS APP ═══ */}
       <FadeIn delay={850}>
         <ExpandableCard
-          title="The Science Behind This App"
+          title={tx("you.scienceBehind", lang)}
           subtitle="Why numbers reveal patterns in your life"
           icon={<Info className="h-5 w-5 text-blue-400" />}
           badgeColor="bg-blue-400/10 text-blue-400"

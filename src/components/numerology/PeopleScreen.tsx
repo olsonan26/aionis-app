@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/LanguageContext";
 import { useState, useMemo, useCallback } from "react";
 import {
   calculateCoreNumbers,
@@ -117,6 +118,7 @@ interface PeopleScreenProps {
 }
 
 export default function PeopleScreen({ profile }: PeopleScreenProps) {
+  const { lang } = useLanguage();
   const [savedCharts, setSavedCharts] = useState<SavedChart[]>(loadSavedCharts);
   const [viewingChart, setViewingChart] = useState<SavedChart | null>(null);
   const [mode, setMode] = useState<"list" | "add" | "view">("list");
@@ -319,7 +321,7 @@ export default function PeopleScreen({ profile }: PeopleScreenProps) {
                   <Users className="h-7 w-7 text-violet-400/30" />
                 </div>
                 <p className="text-sm text-white/30">
-                  No saved charts yet. Look up someone to get started!
+                  {lang === "es" ? "Aún no hay cartas guardadas. ¡Busca a alguien para comenzar!" : "No saved charts yet. Look up someone to get started!"}
                 </p>
               </div>
             </FadeIn>
