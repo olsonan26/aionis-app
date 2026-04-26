@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 interface TypewriterProps {
   text: string;
@@ -6,13 +6,11 @@ interface TypewriterProps {
   delay?: number;
   className?: string;
   onComplete?: () => void;
-  cursor?: boolean;
 }
 
-export function Typewriter({ text, speed = 30, delay = 0, className = "", onComplete, cursor = true }: TypewriterProps) {
+export function Typewriter({ text, speed = 40, delay = 0, className = "", onComplete }: TypewriterProps) {
   const [displayed, setDisplayed] = useState("");
   const [started, setStarted] = useState(false);
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setStarted(true), delay);
@@ -22,7 +20,6 @@ export function Typewriter({ text, speed = 30, delay = 0, className = "", onComp
   useEffect(() => {
     if (!started) return;
     if (displayed.length >= text.length) {
-      setDone(true);
       onComplete?.();
       return;
     }
@@ -30,58 +27,47 @@ export function Typewriter({ text, speed = 30, delay = 0, className = "", onComp
       setDisplayed(text.slice(0, displayed.length + 1));
     }, speed);
     return () => clearTimeout(timer);
-  }, [displayed, started, text, speed, onComplete]);
+  }, [started, displayed, text, speed, onComplete]);
 
   return (
     <span className={className}>
       {displayed}
-      {cursor && !done && <span className="animate-pulse text-amber-400">|</span>}
+      {displayed.length < text.length && (
+        <span className="animate-pulse text-amber-400">|</span>
+      )}
     </span>
   );
 }
 
-interface TypewriterLoopProps {
-  words: string[];
-  typingSpeed?: number;
-  deletingSpeed?: number;
-  pauseTime?: number;
+interface TypewriterListProps {
+  items: string[];
+  speed?: number;
+  itemDelay?: number;
   className?: string;
+  itemClassName?: string;
 }
 
-export function TypewriterLoop({ words, typingSpeed = 80, deletingSpeed = 40, pauseTime = 2000, className = "" }: TypewriterLoopProps) {
-  const [wordIndex, setWordIndex] = useState(0);
-  const [displayed, setDisplayed] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = words[wordIndex];
-    
-    if (!isDeleting && displayed === current) {
-      const timer = setTimeout(() => setIsDeleting(true), pauseTime);
-      return () => clearTimeout(timer);
-    }
-
-    if (isDeleting && displayed === "") {
-      setIsDeleting(false);
-      setWordIndex((prev) => (prev + 1) % words.length);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (isDeleting) {
-        setDisplayed(current.slice(0, displayed.length - 1));
-      } else {
-        setDisplayed(current.slice(0, displayed.length + 1));
-      }
-    }, isDeleting ? deletingSpeed : typingSpeed);
-
-    return () => clearTimeout(timer);
-  }, [displayed, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
+export function TypewriterList({ items, speed = 30, itemDelay = 200, className = "", itemClassName = "" }: TypewriterListProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [completedItems, setCompletedItems] = useState<string[]>([]);
 
   return (
-    <span className={className}>
-      {displayed}
-      <span className="animate-pulse text-amber-400">|</span>
-    </span>
+    <div className={className}>
+      {completedItems.map((item, i) => (
+        <div key={i} className={itemClassName}>{item}</div>
+      ))}
+      {currentIndex < items.length && (
+        <Typewriter
+          text={items[currentIndex]}
+          speed={speed}
+          delay={currentIndex === 0 ? 0 : itemDelay}
+          className={itemClassName}
+          onComplete={() => {
+            setCompletedItems(prev => [...prev, items[currentIndex]]);
+            setCurrentIndex(prev => prev + 1);
+          }}
+        />
+      )}
+    </div>
   );
 }
