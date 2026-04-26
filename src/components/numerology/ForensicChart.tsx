@@ -7,6 +7,7 @@ import {
 } from "@/lib/chartEngine";
 import { NUM_COLORS } from "@/data/viContent";
 import { NumberPopup } from "@/components/ui/number-popup";
+import { LetterPopup } from "@/components/ui/letter-popup";
 import {
   expressionDescriptions,
   soulUrgeDescriptions,
@@ -225,15 +226,19 @@ export default function ForensicChart({ name, day, month, year }: ForensicChartP
                     const letter = d.letters[pi] || '';
                     const up = letter.toUpperCase();
                     const isHighlight = up === 'A' || up === 'S';
+                    const letterColor = isHighlight ? '#facc15' : (['#ef4444', '#06b6d4', '#10b981'][pi] || '#888');
                     return (
                       <td
                         key={d.age}
                         className={`w-7 h-5 text-center ${
                           d.age === age ? 'bg-amber-400/10' : ''
-                        } ${isHighlight ? 'font-bold text-yellow-300' : ''}`}
-                        style={{ color: isHighlight ? undefined : ['#ef4444', '#06b6d4', '#10b981'][pi] || '#888' }}
+                        }`}
                       >
-                        {letter}
+                        {letter ? (
+                          <LetterPopup letter={letter} color={letterColor} className={`text-[11px] ${isHighlight ? 'font-bold' : ''}`}>
+                            {letter}
+                          </LetterPopup>
+                        ) : null}
                       </td>
                     );
                   })}

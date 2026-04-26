@@ -597,3 +597,246 @@ export function calculateMindMode(
 export function calculateCalledNameValue(firstName: string): { value: number; compound: string } {
   return calledNameValue(firstName);
 }
+
+// ─── Seasons (Module 7) ───
+// 36 - BDay single digit = end of Spring
+// Summer = 9 years, Autumn = 9 years, Winter = rest of life
+
+export interface SeasonInfo {
+  name: "Spring" | "Summer" | "Autumn" | "Winter";
+  startAge: number;
+  endAge: number | null; // null = rest of life
+  color: string;
+}
+
+export interface SeasonsResult {
+  seasons: SeasonInfo[];
+  currentSeason: SeasonInfo;
+  springEnd: number;
+  currentAge: number;
+}
+
+export function calculateSeasons(
+  birthDay: number,
+  birthMonth: number,
+  birthYear: number
+): SeasonsResult {
+  // Calculate the BDay single digit from full birthday sum
+  const bdaySum = reduceToSingle(birthDay + birthMonth + birthYear);
+  const springEndAge = 36 - bdaySum;
+
+  const seasons: SeasonInfo[] = [
+    { name: "Spring", startAge: 0, endAge: springEndAge, color: "#3b82f6" },
+    { name: "Summer", startAge: springEndAge + 1, endAge: springEndAge + 9, color: "#f97316" },
+    { name: "Autumn", startAge: springEndAge + 10, endAge: springEndAge + 18, color: "#eab308" },
+    { name: "Winter", startAge: springEndAge + 19, endAge: null, color: "#a855f7" },
+  ];
+
+  const age = currentAge(birthDay, birthMonth, birthYear);
+  let current = seasons[3]; // default to Winter
+  for (const s of seasons) {
+    if (s.endAge === null) { current = s; break; }
+    if (age <= s.endAge) { current = s; break; }
+  }
+
+  return { seasons, currentSeason: current, springEnd: springEndAge, currentAge: age };
+}
+
+// ─── Pinnacles & Challenges (Module 7) ───
+// P&C use Month, Day, Year ordering (Day in center)
+// Pinnacle 1: Month + Day
+// Pinnacle 2: Day + Year
+// Pinnacle 3: P1 + P2
+// Pinnacle 4: Month + Year
+// Challenge 1: |Month - Day|
+// Challenge 2: |Day - Year|
+// Challenge 3: |C1 - C2|
+// Challenge 4: |Month - Year|
+
+export interface PinnacleChallenge {
+  pinnacle: number;
+  challenge: number;
+  season: string;
+  startAge: number;
+  endAge: number | null;
+}
+
+export function calculatePinnaclesChallenges(
+  birthDay: number,
+  birthMonth: number,
+  birthYear: number
+): PinnacleChallenge[] {
+  const m = reduceToSingle(birthMonth);
+  const d = reduceToSingle(birthDay);
+  const y = reduceToSingle(birthYear);
+  const bdaySum = reduceToSingle(birthDay + birthMonth + birthYear);
+  const springEnd = 36 - bdaySum;
+
+  const p1 = reduceToSingle(m + d);
+  const p2 = reduceToSingle(d + y);
+  const p3 = reduceToSingle(p1 + p2);
+  const p4 = reduceToSingle(m + y);
+
+  const c1 = reduceToSingle(Math.abs(m - d));
+  const c2 = reduceToSingle(Math.abs(d - y));
+  const c3 = reduceToSingle(Math.abs(c1 - c2));
+  const c4 = reduceToSingle(Math.abs(m - y));
+
+  return [
+    { pinnacle: p1, challenge: c1, season: "Spring", startAge: 0, endAge: springEnd },
+    { pinnacle: p2, challenge: c2, season: "Summer", startAge: springEnd + 1, endAge: springEnd + 9 },
+    { pinnacle: p3, challenge: c3, season: "Autumn", startAge: springEnd + 10, endAge: springEnd + 18 },
+    { pinnacle: p4, challenge: c4, season: "Winter", startAge: springEnd + 19, endAge: null },
+  ];
+}
+
+// ─── Stacking Charts (Module 8) ───
+// Compare multiple people's charts side by side for the same year
+
+export interface StackedChartEntry {
+  name: string;
+  age: number;
+  essence: { value: number; compound: string };
+  py: { value: number; compound: string };
+  combiner: { value: number; compound: string };
+}
+
+export function buildStackedChart(
+  people: Array<{ name: string; fullName: string; birthDay: number; birthMonth: number; birthYear: number }>,
+  targetYear: number
+): StackedChartEntry[] {
+  return people.map(p => {
+    const age = targetYear - p.birthYear;
+    const ess = yearEssenceCompound(p.fullName, p.birthYear, targetYear);
+    const py = calculatePersonalYear(p.birthDay, p.birthMonth, targetYear);
+    const com = yearlyCombiner(ess.value, py.value);
+    return { name: p.name, age, essence: ess, py, combiner: com };
+  });
+}
+
+// ─── Diagonal Reading (Module 8) ───
+// Read patterns diagonally across chart (Ess going up, PY going down or vice versa)
+// Returns "diagonal" patterns where consecutive years show mirroring patterns
+
+export interface DiagonalPattern {
+  startAge: number;
+  endAge: number;
+  description: string;
+  type: "ascending" | "descending" | "mirror" | "repeat";
+}
+
+export function findDiagonalPatterns(
+  fullName: string,
+  birthDay: number,
+  birthMonth: number,
+  birthYear: number,
+  startYear: number,
+  endYear: number
+): DiagonalPattern[] {
+  const patterns: DiagonalPattern[] = [];
+  const entries: Array<{ age: number; ess: number; py: number; com: number }> = [];
+
+  for (let year = startYear; year <= endYear; year++) {
+    const age = year - birthYear;
+    if (age < 0) continue;
+    const ess = yearEssenceCompound(fullName, birthYear, year);
+    const py = calculatePersonalYear(birthDay, birthMonth, year);
+    const com = yearlyCombiner(ess.value, py.value);
+    entries.push({ age, ess: ess.value, py: py.value, com: com.value });
+  }
+
+  // Find ascending sequences (ess increasing 1,2,3...)
+  for (let i = 0; i < entries.length - 2; i++) {
+    let run = 1;
+    while (i + run < entries.length && entries[i + run].ess === entries[i].ess + run) run++;
+    if (run >= 3) {
+      patterns.push({
+        startAge: entries[i].age,
+        endAge: entries[i + run - 1].age,
+        description: `Essence ascending from ${entries[i].ess} to ${entries[i + run - 1].ess} — steady growth period`,
+        type: "ascending",
+      });
+    }
+  }
+
+  // Find repeating numbers (same number 3+ years)
+  for (let i = 0; i < entries.length - 2; i++) {
+    let run = 1;
+    while (i + run < entries.length && entries[i + run].py === entries[i].py) run++;
+    if (run >= 3) {
+      patterns.push({
+        startAge: entries[i].age,
+        endAge: entries[i + run - 1].age,
+        description: `Personal Year ${entries[i].py} repeats for ${run} years — intense ${entries[i].py} energy period`,
+        type: "repeat",
+      });
+    }
+  }
+
+  // Find 9/1 transitions (endings → new beginnings)
+  for (let i = 0; i < entries.length - 1; i++) {
+    if (entries[i].py === 9 && entries[i + 1].py === 1) {
+      patterns.push({
+        startAge: entries[i].age,
+        endAge: entries[i + 1].age,
+        description: `Major cycle transition at age ${entries[i].age}-${entries[i + 1].age}: PY 9→1 — ending and new beginning`,
+        type: "mirror",
+      });
+    }
+  }
+
+  return patterns;
+}
+
+// ─── Whole Birthday Number (for Love compatibility) ───
+export function wholeBirthdayNumber(day: number, month: number, year: number): { value: number; compound: string } {
+  const sum = day + month + year;
+  return reduceWithChain(sum);
+}
+
+// ─── Hearts Desire (Vowels of full name) ───
+export function heartsDesire(fullName: string): { value: number; compound: string } {
+  const sum = [...fullName.toUpperCase().replace(/[^A-Z]/g, "")]
+    .filter(ch => isVowel(ch))
+    .reduce((s, ch) => s + getLetterValue(ch), 0);
+  return reduceWithChain(sum);
+}
+
+// ─── Whole Name Number (all letters) ───
+export function wholeNameNumber(fullName: string): { value: number; compound: string } {
+  const sum = [...fullName.toUpperCase().replace(/[^A-Z]/g, "")]
+    .reduce((s, ch) => s + getLetterValue(ch), 0);
+  return reduceWithChain(sum);
+}
+
+// ─── First Name Number ───
+export function firstNameNumber(fullName: string): { value: number; compound: string } {
+  const first = fullName.split(/\s+/)[0] || "";
+  const sum = [...first.toUpperCase().replace(/[^A-Z]/g, "")]
+    .reduce((s, ch) => s + getLetterValue(ch), 0);
+  return reduceWithChain(sum);
+}
+
+// ─── Day of Birth Number (1-31 reduced) ───
+export function dayOfBirthNumber(day: number): { value: number; compound: string } {
+  return reduceWithChain(day);
+}
+
+// ─── Weakness Number (consonants of first name) ───
+export function weaknessNumber(fullName: string): { value: number; compound: string } {
+  const first = fullName.split(/\s+/)[0] || "";
+  const sum = [...first.toUpperCase().replace(/[^A-Z]/g, "")]
+    .filter(ch => !isVowel(ch))
+    .reduce((s, ch) => s + getLetterValue(ch), 0);
+  return reduceWithChain(sum);
+}
+
+// ─── Balance Number (sum of first letters of each name part) ───
+export function balanceNumber(fullName: string): { value: number; compound: string } {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const sum = parts.reduce((s, part) => {
+    const first = part.charAt(0).toUpperCase();
+    return s + (getLetterValue(first) || 0);
+  }, 0);
+  return reduceWithChain(sum);
+}
