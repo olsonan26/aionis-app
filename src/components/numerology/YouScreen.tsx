@@ -2,8 +2,6 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { tx } from "@/lib/i18n";
 import { useMemo, useState, useEffect } from "react";
 import NumerologyMandala from "./NumerologyMandala";
-import EnergySigWaveform from "./EnergySigWaveform";
-import SoulMapConstellation from "./SoulMapConstellation";
 import NameResonanceQuiz from "./NameResonanceQuiz";
 import type { NumerologyProfile } from "@/lib/profileStore";
 import {
@@ -69,7 +67,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
   // Load full profile to check for name changes
   const { lang } = useLanguage();
   const [fullProfile, setFullProfile] = useState<NumerologyProfile | null>(null);
-  const [blueprintView, setBlueprintView] = useState<"mandala" | "waveform" | "constellation">("mandala");
+  const [blueprintView] = useState<"mandala">("mandala");
   useEffect(() => {
     try {
       const raw = localStorage.getItem("aionis_full_profile");
@@ -283,30 +281,7 @@ export default function YouScreen({ profile }: YouScreenProps) {
       {/* ═══ NUMEROLOGICAL BLUEPRINT VISUAL ═══ */}
       <FadeIn delay={50}>
         <div className="space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            {(["mandala", "waveform", "constellation"] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => setBlueprintView(v)}
-                className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all ${
-                  blueprintView === v
-                    ? "bg-white/10 text-white border border-white/20"
-                    : "text-white/30 border border-transparent hover:text-white/50"
-                }`}
-              >
-                {v === "mandala" ? "🔮 Mandala" : v === "waveform" ? "〰️ Waveform" : "✨ Soul Map"}
-              </button>
-            ))}
-          </div>
-          {blueprintView === "mandala" && (
-            <NumerologyMandala name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
-          )}
-          {blueprintView === "waveform" && (
-            <EnergySigWaveform name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
-          )}
-          {blueprintView === "constellation" && (
-            <SoulMapConstellation name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
-          )}
+          <NumerologyMandala name={profile.name} day={profile.day} month={profile.month} year={profile.year} />
         </div>
       </FadeIn>
 
